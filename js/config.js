@@ -69,4 +69,5 @@ const CONFIG = {
 };
 
 // Export de la configuration
-window.CONFIG = CONFIG; 
+window.CONFIG = CONFIG;
+export default CONFIG; 

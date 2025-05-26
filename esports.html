@@ -100,31 +100,29 @@
         </div>
     </div>
     
-    <!-- Bibliothèques Three.js -->
+    <!-- Bibliothèques Three.js et modules de l'application -->
     <script type="module">
+        // Import de Three.js
         import * as THREE from 'three';
         import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
         
-        // Rendre THREE disponible globalement comme avant
+        // Rendre THREE disponible globalement
         window.THREE = THREE;
         window.OrbitControls = OrbitControls;
+        
+        // Import des modules de l'application en tant que fichiers statiques
+        // Ces imports vont charger les scripts et les exécuter, ce qui définira les classes sur window
+        import './js/config.js';
+        import './js/scene.js';
+        import './js/camera.js';
+        import './js/globe.js';
+        import './js/starfield.js';
+        import './js/ui.js';
+        import './js/examples/esports-markers.js';
     </script>
     
-    <!-- Configuration -->
-    <script src="js/config.js"></script>
-    
-    <!-- Modules de l'application -->
-    <script src="js/scene.js"></script>
-    <script src="js/camera.js"></script>
-    <script src="js/globe.js"></script>
-    <script src="js/starfield.js"></script>
-    <script src="js/ui.js"></script>
-    
-    <!-- Module esports -->
-    <script src="js/examples/esports-markers.js"></script>
-    
     <!-- Application principale pour les esports -->
-    <script>
+    <script type="module">
         // Informations sur les clubs
         const clubsInfo = {
             'karmine': {
