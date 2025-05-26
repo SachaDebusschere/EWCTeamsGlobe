@@ -89,7 +89,7 @@
         
         <div id="test-controls">
             <h4>🎮 EWC Partenaires</h4>
-            <button onclick="togglePartners()">Afficher/Masquer Partenaires</button>
+            <button id="togglePartnersBtn">Afficher/Masquer Partenaires</button>
         </div>
         
         <div id="club-info">
@@ -774,6 +774,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             esportsApp = new EsportsGlobeApp();
             esportsApp.init();
+            
+            // Ajouter l'écouteur d'événement pour le bouton d'affichage/masquage des partenaires
+            document.getElementById('togglePartnersBtn').addEventListener('click', togglePartners);
         });
 
         // Fonctions pour les boutons
@@ -864,6 +867,9 @@
                 });
             }
         }
+
+        // Exposer togglePartners globalement pour rétrocompatibilité
+        window.togglePartners = togglePartners;
     </script>
 </body>
 </html> 
