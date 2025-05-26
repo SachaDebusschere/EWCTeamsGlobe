@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="0;url=esports.html">
+    <title>Redirection vers Globe EWC</title>
+    <script>
+        // Redirection JavaScript immédiate en cas d'échec de la balise meta
+        window.location.href = 'esports.html';
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            text-align: center;
+            padding-top: 100px;
+        }
+        a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Redirection en cours...</h1>
+    <p>Si vous n'êtes pas redirigé automatiquement, <a href="esports.html">cliquez ici</a>.</p>
+    <script>
+        // Seconde tentative de redirection après le chargement du DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                window.location.href = 'esports.html';
+            }, 100);
+        });
+    </script>
+</body>
+</html> 

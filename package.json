@@ -1,0 +1,61 @@
+{
+  "name": "globe-interactif-threejs",
+  "version": "2.0.0",
+  "description": "Globe terrestre interactif créé avec Three.js et WebGL, utilisant une architecture modulaire",
+  "main": "index.html",
+  "scripts": {
+    "start": "python server.py",
+    "dev": "python server.py",
+    "test": "python -m http.server 8001 && echo 'Ouvrez http://localhost:8001/test.html'",
+    "serve": "python -m http.server 8000"
+  },
+  "keywords": [
+    "threejs",
+    "webgl",
+    "globe",
+    "earth",
+    "3d",
+    "interactive",
+    "javascript",
+    "modular"
+  ],
+  "author": "Votre Nom",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {},
+  "cdnDependencies": {
+    "three.js": "r128",
+    "three-orbit-controls": "latest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/votre-username/globe-interactif.git"
+  },
+  "bugs": {
+    "url": "https://github.com/votre-username/globe-interactif/issues"
+  },
+  "homepage": "https://github.com/votre-username/globe-interactif#readme",
+  "engines": {
+    "python": ">=3.6"
+  },
+  "files": [
+    "index.html",
+    "test.html",
+    "styles.css",
+    "js/",
+    "public/",
+    "README.md",
+    "DEVELOPER.md",
+    "server.py"
+  ],
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie <= 11"
+  ],
+  "config": {
+    "port": 8000,
+    "host": "localhost"
+  }
+} 

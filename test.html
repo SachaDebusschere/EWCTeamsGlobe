@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Globe Interactif - Test avec Marqueurs</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        #test-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            z-index: 1000;
+        }
+        
+        #test-controls button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        #test-controls button:hover {
+            background: #0088ff;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <canvas id="globe-canvas"></canvas>
+        <div id="loading">
+            <div class="loader"></div>
+            <p>Chargement du globe...</p>
+        </div>
+        <div id="controls-info">
+            <p>🖱️ Clic gauche + glisser : Rotation</p>
+            <p>🖱️ Molette : Zoom</p>
+            <p>🖱️ Clic droit + glisser : Panoramique</p>
+            <p>⌨️ Espace : Auto-rotation</p>
+            <p>⌨️ R : Réinitialiser caméra</p>
+            <p>⌨️ M : Ajouter marqueurs</p>
+        </div>
+        
+        <div id="test-controls">
+            <h4>🧪 Contrôles de Test</h4>
+            <button onclick="addTestMarkers()">Ajouter Villes</button>
+            <button onclick="clearMarkers()">Effacer Marqueurs</button>
+            <button onclick="addRandomMarker()">Marqueur Aléatoire</button>
+            <button onclick="toggleStars()">Basculer Étoiles</button>
+        </div>
+    </div>
+    
+    <!-- Bibliothèques Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- Configuration -->
+    <script src="js/config.js"></script>
+    
+    <!-- Modules de l'application -->
+    <script src="js/scene.js"></script>
+    <script src="js/camera.js"></script>
+    <script src="js/globe.js"></script>
+    <script src="js/starfield.js"></script>
+    <script src="js/ui.js"></script>
+    
+    <!-- Module exemple -->
+    <script src="js/examples/markers.js"></script>
+    
+    <!-- Application principale pour les tests -->
+    <script>
+        // Définir l'application de test sans hériter de GlobeApp
+        class TestGlobeApp {
+            constructor() {
+                this.sceneManager = new SceneManager();
+                this.cameraManager = new CameraManager();
+                this.globeManager = new GlobeManager();
+                this.starFieldManager = new StarFieldManager();
+                this.uiManager = new UIManager();
+                this.markersManager = new MarkersManager();
+                
+                this.isInitialized = false;
+                this.animationId = null;
+            }
+
+            async init() {
+                try {
+                    // Initialisation de l'interface utilisateur
+                    this.uiManager.init();
+                    
+                    // Récupération du canvas
+                    const canvas = document.getElementById('globe-canvas');
+                    if (!canvas) {
+                        throw new Error('Canvas non trouvé');
+                    }
+                    
+                    // Initialisation de la scène
+                    const { scene, renderer } = this.sceneManager.init(canvas);
+                    
+                    // Initialisation de la caméra
+                    const camera = this.cameraManager.init(renderer);
+                    
+                    // Création du champ d'étoiles
+                    const stars = this.starFieldManager.create();
+                    this.sceneManager.add(stars);
+                    
+                    // Création du globe (asynchrone)
+                    this.globeManager.create((globe) => {
+                        this.sceneManager.add(globe);
+                        
+                        // Initialisation des marqueurs et attachement au globe
+                        this.markersManager.init(globe);
+                        
+                        this.uiManager.hideLoading();
+                        this.uiManager.showNotification('Globe chargé avec succès !');
+                    });
+                    
+                    // Configuration des contrôles clavier
+                    this.setupKeyboardControls();
+                    
+                    // Configuration des événements de redimensionnement
+                    this.setupWindowEvents();
+                    
+                    // Démarrage de la boucle d'animation
+                    this.startAnimation();
+                    
+                    this.isInitialized = true;
+                    
+                } catch (error) {
+                    console.error('Erreur lors de l\'initialisation:', error);
+                    this.uiManager.handleError(error);
+                }
+            }
+
+            setupKeyboardControls() {
+                // Espace : Basculer l'auto-rotation
+                this.uiManager.registerKeyCallback('Space', () => {
+                    this.cameraManager.toggleAutoRotate();
+                    const isAutoRotating = this.cameraManager.controls.autoRotate;
+                    this.uiManager.showNotification(
+                        isAutoRotating ? 'Auto-rotation activée' : 'Auto-rotation désactivée'
+                    );
+                });
+                
+                // R : Réinitialiser la caméra
+                this.uiManager.registerKeyCallback('KeyR', () => {
+                    this.cameraManager.reset();
+                    this.uiManager.showNotification('Position de la caméra réinitialisée');
+                });
+                
+                // M : Ajouter des marqueurs de villes
+                this.uiManager.registerKeyCallback('KeyM', () => {
+                    this.markersManager.addWorldCities();
+                    this.uiManager.showNotification('Marqueurs de villes ajoutés !');
+                });
+            }
+
+            setupWindowEvents() {
+                window.addEventListener('resize', () => {
+                    this.onWindowResize();
+                }, false);
+                
+                window.addEventListener('error', (e) => {
+                    this.uiManager.handleError(e.error);
+                });
+            }
+
+            onWindowResize() {
+                this.cameraManager.onWindowResize();
+                this.sceneManager.onWindowResize();
+            }
+
+            startAnimation() {
+                this.animate();
+            }
+
+            stopAnimation() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+            }
+
+            animate() {
+                this.animationId = requestAnimationFrame(() => this.animate());
+                
+                // Mise à jour des managers
+                this.cameraManager.update();
+                this.globeManager.update();
+                this.starFieldManager.update();
+                this.markersManager.update();
+                
+                // Rendu de la scène
+                this.sceneManager.render(this.cameraManager.getCamera());
+            }
+
+            // Méthodes d'accès aux managers
+            getSceneManager() { return this.sceneManager; }
+            getCameraManager() { return this.cameraManager; }
+            getGlobeManager() { return this.globeManager; }
+            getStarFieldManager() { return this.starFieldManager; }
+            getUIManager() { return this.uiManager; }
+            getMarkersManager() { return this.markersManager; }
+        }
+
+        // Instance globale de test
+        let testApp;
+
+        // Démarrage de l'application de test
+        document.addEventListener('DOMContentLoaded', function() {
+            testApp = new TestGlobeApp();
+            testApp.init();
+            
+            // Exposition globale pour les tests
+            window.testApp = testApp;
+        });
+
+        // Fonctions de test
+        function addTestMarkers() {
+            testApp.getMarkersManager().addWorldCities();
+            testApp.getUIManager().showNotification('Villes ajoutées !');
+        }
+
+        function clearMarkers() {
+            testApp.getMarkersManager().clearMarkers();
+            testApp.getUIManager().showNotification('Marqueurs effacés !');
+        }
+
+        function addRandomMarker() {
+            const lat = (Math.random() - 0.5) * 180;
+            const lon = (Math.random() - 0.5) * 360;
+            const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            testApp.getMarkersManager().addMarker(lat, lon, {
+                color: color,
+                size: 0.06 + Math.random() * 0.04
+            });
+            
+            testApp.getUIManager().showNotification(`Marqueur ajouté à ${lat.toFixed(1)}°, ${lon.toFixed(1)}°`);
+        }
+
+        function toggleStars() {
+            const stars = testApp.getStarFieldManager().getStars();
+            stars.visible = !stars.visible;
+            testApp.getUIManager().showNotification(
+                stars.visible ? 'Étoiles affichées' : 'Étoiles masquées'
+            );
+        }
+    </script>
+</body>
+</html> 

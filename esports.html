@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Globe EWC Partenaires - Three.js</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        #test-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            z-index: 1000;
+        }
+        
+        #test-controls button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        #test-controls button:hover {
+            background: #0088ff;
+        }
+        
+        #club-info {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            z-index: 1000;
+            max-width: 300px;
+            display: none;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        #club-info h3 {
+            margin-top: 0;
+            color: #00d4ff;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        #club-info p {
+            margin: 5px 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        #club-info img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin: 0 auto 10px;
+            display: block;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <canvas id="globe-canvas"></canvas>
+        <div id="loading">
+            <div class="loader"></div>
+            <p>Chargement du globe...</p>
+        </div>
+        <div id="controls-info">
+            <p>🖱️ Clic gauche + glisser : Rotation du globe</p>
+            <p>🖱️ Molette : Zoom avant/arrière (<span id="zoom-level">100%</span>)</p>
+            <p>⌨️ Espace : Auto-rotation</p>
+            <p>🖱️ Clic sur marqueur : Info du club</p>
+        </div>
+        
+        <div id="test-controls">
+            <h4>🎮 EWC Partenaires</h4>
+            <button onclick="togglePartners()">Afficher/Masquer Partenaires</button>
+        </div>
+        
+        <div id="club-info">
+            <img id="club-logo" src="" alt="Logo du club">
+            <h3 id="club-name">Nom du club</h3>
+            <p id="club-location">Localisation</p>
+            <p id="club-description">Description du club...</p>
+        </div>
+    </div>
+    
+    <!-- Bibliothèques Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- Configuration -->
+    <script src="js/config.js"></script>
+    
+    <!-- Modules de l'application -->
+    <script src="js/scene.js"></script>
+    <script src="js/camera.js"></script>
+    <script src="js/globe.js"></script>
+    <script src="js/starfield.js"></script>
+    <script src="js/ui.js"></script>
+    
+    <!-- Module esports -->
+    <script src="js/examples/esports-markers.js"></script>
+    
+    <!-- Application principale pour les esports -->
+    <script>
+        // Informations sur les clubs
+        const clubsInfo = {
+            'karmine': {
+                name: 'Karmine Corp',
+                location: 'Paris, France',
+                description: 'Fondée en 2020, la Karmine Corp est une équipe française d\'esport connue pour ses succès en LFL et sa communauté très engagée.',
+                logoPath: './public/img/logos/logo_karmine.webp',
+                lat: 48.8566,
+                lon: 2.3522
+            },
+            't1': {
+                name: 'T1',
+                location: 'Séoul, Corée du Sud',
+                description: 'T1 est une organisation esport légendaire, notamment connue pour ses performances historiques sur League of Legends avec Faker.',
+                logoPath: './public/img/logos/logo_t1.png',
+                lat: 37.5665,
+                lon: 126.9780
+            },
+            'falcons': {
+                name: 'Team Falcons',
+                location: 'Riyad, Arabie Saoudite',
+                description: 'Team Falcons est une organisation esport saoudienne en pleine expansion, investissant dans plusieurs jeux compétitifs.',
+                logoPath: './public/img/logos/logo_falcons.webp',
+                lat: 24.7136,
+                lon: 46.6753
+            },
+            'g2': {
+                name: 'G2 Esports',
+                location: 'Berlin, Allemagne',
+                description: 'G2 Esports est l\'une des organisations les plus prestigieuses d\'Europe, avec des équipes d\'élite dans plusieurs disciplines.',
+                logoPath: './public/img/logos/G2_Esports_oldlogo.webp',
+                lat: 52.5200,
+                lon: 13.4050
+            },
+            'jdg': {
+                name: 'JD Gaming',
+                location: 'Shanghai, Chine',
+                description: 'JD Gaming est une équipe chinoise majeure, particulièrement reconnue pour ses performances en League of Legends.',
+                logoPath: './public/img/logos/logo_jdg.png',
+                lat: 31.2304,
+                lon: 121.4737
+            },
+            'loud': {
+                name: 'LOUD',
+                location: 'São Paulo, Brésil',
+                description: 'LOUD est l\'une des organisations les plus populaires d\'Amérique Latine, connue pour son engagement communautaire et ses contenus.',
+                logoPath: './public/img/logos/logo_loud.png',
+                lat: -23.5505,
+                lon: -46.6333
+            },
+            'sentinels': {
+                name: 'Sentinels',
+                location: 'Los Angeles, États-Unis',
+                description: 'Sentinels est une organisation nord-américaine réputée notamment pour ses équipes VALORANT et son histoire dans l\'esport.',
+                logoPath: './public/img/logos/logo_sentinels.png',
+                lat: 34.0522,
+                lon: -118.2437
+            }
+        };
+        
+        // Application globe pour les esports
+        class EsportsGlobeApp {
+            constructor() {
+                this.sceneManager = new SceneManager();
+                this.cameraManager = new CameraManager();
+                this.globeManager = new GlobeManager();
+                this.starFieldManager = new StarFieldManager();
+                this.uiManager = new UIManager();
+                this.esportsManager = new EsportsMarkersManager();
+                
+                this.isInitialized = false;
+                this.animationId = null;
+                this.raycaster = new THREE.Raycaster();
+                this.mouse = new THREE.Vector2();
+                this.selectedClub = null;
+                this.clubInfoElement = document.getElementById('club-info');
+                
+                // Enregistrement des logos
+                this.logosPaths = {};
+                for (const [clubId, info] of Object.entries(clubsInfo)) {
+                    this.logosPaths[clubId] = info.logoPath;
+                }
+            }
+
+            async init() {
+                try {
+                    // Initialisation de l'interface utilisateur
+                    this.uiManager.init();
+                    
+                    // Récupération du canvas
+                    const canvas = document.getElementById('globe-canvas');
+                    if (!canvas) {
+                        throw new Error('Canvas non trouvé');
+                    }
+                    
+                    // Initialisation de la scène
+                    const { scene, renderer } = this.sceneManager.init(canvas);
+                    
+                    // Initialisation de la caméra
+                    const camera = this.cameraManager.init(renderer);
+                    
+                    // Vérifier si les contrôles existent avant de les configurer
+                    if (this.cameraManager.controls) {
+                        // Configurer les contrôles pour une meilleure navigation
+                        const controls = this.cameraManager.controls;
+                        controls.enableDamping = true;
+                        controls.dampingFactor = 0.1;
+                        controls.rotateSpeed = 0.7;
+                        controls.minDistance = CONFIG.GLOBE.RADIUS + 2;
+                        controls.maxDistance = CONFIG.GLOBE.RADIUS * 5;
+                    } else {
+                        console.log('Utilisation du drag direct sur le globe (OrbitControls désactivés)');
+                    }
+                    
+                    // Création du champ d'étoiles
+                    const stars = this.starFieldManager.create();
+                    this.sceneManager.add(stars);
+                    
+                    // Préchargement des logos
+                    this.esportsManager.preloadTextures(this.logosPaths, () => {
+                        console.log('Logos chargés avec succès');
+                        this.uiManager.showNotification('Logos des clubs chargés !');
+                    });
+                    
+                    // Création du globe (asynchrone)
+                    this.globeManager.create((globe) => {
+                        this.sceneManager.add(globe);
+                        
+                        // Initialiser les contrôles de drag si nécessaire
+                        if (!this.cameraManager.controls) {
+                            // Initialiser le drag sur le globe après un petit délai pour s'assurer que tout est prêt
+                            setTimeout(() => {
+                                this.globeManager.initDragControls();
+                                console.log('Contrôles de drag initialisés pour esports');
+                                
+                                // Vérifier que les contrôles de drag sont correctement initialisés
+                                console.log('État du drag:', {
+                                    isDragging: this.globeManager.isDragging,
+                                    autoRotate: this.globeManager.autoRotate,
+                                    damping: this.globeManager.damping,
+                                    rotationSpeed: this.globeManager.rotationSpeed
+                                });
+                            }, 100);
+                        }
+                        
+                        // Initialisation des marqueurs et attachement au globe
+                        this.esportsManager.init(globe);
+                        
+                        this.uiManager.hideLoading();
+                        this.uiManager.showNotification('Globe chargé avec succès !');
+                    });
+                    
+                    // Configuration des contrôles clavier
+                    this.setupKeyboardControls();
+                    
+                    // Configuration des événements
+                    this.setupEvents();
+                    
+                    // Démarrage de la boucle d'animation
+                    this.startAnimation();
+                    
+                    this.isInitialized = true;
+                    
+                } catch (error) {
+                    console.error('Erreur lors de l\'initialisation:', error);
+                    this.uiManager.handleError(error);
+                }
+            }
+
+            setupKeyboardControls() {
+                // Espace : Basculer l'auto-rotation
+                this.uiManager.registerKeyCallback('Space', () => {
+                    // Vérifier si nous utilisons les OrbitControls ou le drag direct sur le globe
+                    if (this.cameraManager.controls) {
+                        this.cameraManager.toggleAutoRotate();
+                        const isAutoRotating = this.cameraManager.controls.autoRotate;
+                        this.uiManager.showNotification(
+                            isAutoRotating ? 'Auto-rotation activée' : 'Auto-rotation désactivée'
+                        );
+                    } else {
+                        // Utiliser le gestionnaire d'auto-rotation du globe
+                        const isAutoRotating = this.globeManager.toggleAutoRotate();
+                        this.uiManager.showNotification(
+                            isAutoRotating ? 'Auto-rotation activée' : 'Auto-rotation désactivée'
+                        );
+                    }
+                });
+                
+                // R : Réinitialiser la caméra
+                this.uiManager.registerKeyCallback('KeyR', () => {
+                    if (this.cameraManager.controls) {
+                        this.cameraManager.reset();
+                        this.uiManager.showNotification('Position de la caméra réinitialisée');
+                    } else {
+                        this.uiManager.showNotification('Réinitialisation non disponible en mode drag direct');
+                    }
+                });
+            }
+
+            setupEvents() {
+                // Événement de redimensionnement
+                window.addEventListener('resize', () => {
+                    this.cameraManager.onWindowResize();
+                    this.sceneManager.onWindowResize();
+                }, false);
+                
+                // Gestion des erreurs globales
+                window.addEventListener('error', (e) => {
+                    this.uiManager.handleError(e.error);
+                });
+                
+                // Variables pour détecter un drag vs un clic
+                let isDragging = false;
+                let dragStartX = 0;
+                let dragStartY = 0;
+                const dragThreshold = 3; // Pixels de mouvement pour considérer comme un drag
+                
+                // Gestion du clic sur le canvas
+                const canvas = document.getElementById('globe-canvas');
+                
+                canvas.addEventListener('mousedown', (event) => {
+                    isDragging = false;
+                    dragStartX = event.clientX;
+                    dragStartY = event.clientY;
+                });
+                
+                canvas.addEventListener('mousemove', (event) => {
+                    if (!isDragging) {
+                        const dx = Math.abs(event.clientX - dragStartX);
+                        const dy = Math.abs(event.clientY - dragStartY);
+                        
+                        if (dx > dragThreshold || dy > dragThreshold) {
+                            isDragging = true;
+                        }
+                    }
+                });
+                
+                canvas.addEventListener('click', (event) => {
+                    // Ne traiter le clic que s'il n'y a pas eu de drag
+                    if (!isDragging) {
+                        this.handleCanvasClick(event);
+                    }
+                });
+                
+                // Fermer la popup de club si on clique ailleurs
+                document.addEventListener('click', (event) => {
+                    if (event.target.id !== 'globe-canvas' && 
+                        !event.target.closest('#club-info') && 
+                        this.clubInfoElement.style.display === 'block') {
+                        this.hideClubInfo();
+                    }
+                });
+            }
+            
+            handleCanvasClick(event) {
+                // Calcul de la position de la souris normalisée
+                const rect = event.target.getBoundingClientRect();
+                this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+                
+                // Mise à jour du raycaster
+                this.raycaster.setFromCamera(this.mouse, this.cameraManager.getCamera());
+                
+                // Vérifier si un marqueur a été cliqué
+                const clickedMarker = this.esportsManager.getClickedMarker(this.raycaster);
+                if (clickedMarker) {
+                    this.showClubInfo(clickedMarker);
+                } else {
+                    this.hideClubInfo();
+                }
+            }
+            
+            showClubInfo(marker) {
+                const club = clubsInfo[marker.clubId];
+                if (!club) return;
+                
+                document.getElementById('club-logo').src = club.logoPath;
+                document.getElementById('club-name').textContent = club.name;
+                document.getElementById('club-location').textContent = club.location;
+                document.getElementById('club-description').textContent = club.description;
+                
+                this.clubInfoElement.style.display = 'block';
+                this.selectedClub = marker;
+            }
+            
+            hideClubInfo() {
+                this.clubInfoElement.style.display = 'none';
+                this.selectedClub = null;
+            }
+
+            startAnimation() {
+                this.animate();
+            }
+
+            stopAnimation() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+            }
+
+            animate() {
+                this.animationId = requestAnimationFrame(() => this.animate());
+                
+                // Mise à jour des managers
+                this.cameraManager.update();
+                this.globeManager.update();
+                this.starFieldManager.update();
+                this.esportsManager.update();
+                
+                // Rendu de la scène
+                this.sceneManager.render(this.cameraManager.getCamera());
+            }
+            
+            // Méthodes pour interagir avec les clubs
+            addEWCPartners() {
+                this.esportsManager.addEWCPartners();
+                this.uiManager.showNotification('Partenaires EWC ajoutés !');
+            }
+            
+            clearPartners() {
+                this.esportsManager.clearMarkers();
+                this.hideClubInfo();
+                this.uiManager.showNotification('Partenaires masqués');
+            }
+            
+            focusOnClub(clubId) {
+                const club = clubsInfo[clubId];
+                if (!club) {
+                    console.error(`Club non trouvé: ${clubId}`);
+                    return;
+                }
+                
+                console.log(`Focus sur le club: ${club.name} (${club.lat}, ${club.lon})`);
+                
+                // Vérifier si le club est déjà affiché
+                let marker = this.esportsManager.markers.find(m => m.clubId === clubId);
+                
+                // Si le marqueur n'existe pas, on l'ajoute
+                if (!marker) {
+                    // Effacer d'abord tous les marqueurs pour éviter les doublons
+                    this.esportsManager.clearMarkers();
+                    
+                    // Ajouter le marqueur spécifique
+                    marker = this.esportsManager.addClub(
+                        clubId, 
+                        club.name, 
+                        club.lat, 
+                        club.lon, 
+                        {
+                            scale: 0.7, // Plus grand pour une meilleure visibilité
+                            opacity: 1.0,
+                            pulseSpeed: 0.02 // Pulsation plus rapide
+                        }
+                    );
+                    
+                    console.log(`Marqueur ajouté pour le focus: ${club.name}`);
+                    this.uiManager.showNotification(`Focus sur ${club.name}`);
+                    
+                    // Mettre à jour la variable globale
+                    partnersVisible = true;
+                }
+                
+                // Ajouter un petit délai pour laisser le temps au marqueur d'être créé
+                setTimeout(() => {
+                    // Utiliser directement la position exacte du sprite du marqueur
+                    if (marker && marker.sprite) {
+                        // Effectuer le focus en utilisant la position exacte du sprite
+                        this.focusOnPosition(marker.sprite.position);
+                        
+                        // Faire "pulser" le marqueur plus intensément
+                        const originalSpeed = marker.pulseSpeed;
+                        const originalScale = marker.scaleBase;
+                        
+                        marker.pulseSpeed = 0.04;
+                        marker.scaleBase = originalScale * 1.3;
+                        
+                        // Revenir à la normale après 2 secondes
+                        setTimeout(() => {
+                            marker.pulseSpeed = originalSpeed;
+                            marker.scaleBase = originalScale;
+                            
+                            // Afficher les infos après l'animation
+                            this.showClubInfo(marker);
+                        }, 1500);
+                    } else {
+                        console.error("Erreur: Marqueur ou sprite non trouvé");
+                    }
+                }, 100);
+            }
+            
+            /**
+             * Focus la caméra sur une position 3D spécifique
+             * @param {THREE.Vector3} position - Position 3D sur laquelle faire le focus
+             */
+            focusOnPosition(position) {
+                console.log("Focus sur position exacte:", position);
+                
+                // Vérifier si nous avons des OrbitControls
+                const controls = this.cameraManager.controls;
+                
+                if (controls) {
+                    // Version avec OrbitControls
+                    // Définir d'abord la cible des contrôles directement sur la position
+                    controls.target.copy(position);
+                    
+                    // Approche simple pour positionner la caméra:
+                    // Décaler la position vers l'extérieur du globe
+                    const distance = 6; // Distance par rapport à la position
+                    
+                    // Calculer la direction depuis le centre du globe
+                    const directionFromCenter = position.clone().normalize();
+                    
+                    // Calculer la position de la caméra en s'éloignant du globe dans cette direction
+                    const cameraPos = new THREE.Vector3().copy(position).add(
+                        directionFromCenter.multiplyScalar(distance)
+                    );
+                    
+                    console.log("Position cible:", position);
+                    console.log("Position caméra:", cameraPos);
+                    
+                    // Ajouter un visuel de debug pour les positions
+                    this.debugPositions(position, cameraPos);
+                    
+                    // Désactiver l'auto-rotation temporairement
+                    const wasAutoRotating = controls.autoRotate;
+                    controls.autoRotate = false;
+                    
+                    // Animation de la caméra
+                    const startPos = this.cameraManager.camera.position.clone();
+                    const endPos = cameraPos;
+                    const duration = 1500; // ms
+                    const startTime = Date.now();
+                    
+                    // Mettre à jour immédiatement la cible
+                    controls.update();
+                    
+                    const animateCamera = () => {
+                        const elapsed = Date.now() - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+                        
+                        // Easing function pour un mouvement plus naturel
+                        const easeProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease out
+                        
+                        // Interpolation de la position de la caméra
+                        const x = startPos.x + (endPos.x - startPos.x) * easeProgress;
+                        const y = startPos.y + (endPos.y - startPos.y) * easeProgress;
+                        const z = startPos.z + (endPos.z - startPos.z) * easeProgress;
+                        
+                        // Appliquer la position
+                        this.cameraManager.camera.position.set(x, y, z);
+                        controls.update();
+                        
+                        if (progress < 1) {
+                            requestAnimationFrame(animateCamera);
+                        } else {
+                            // Restaurer l'auto-rotation après un délai
+                            setTimeout(() => {
+                                controls.autoRotate = wasAutoRotating;
+                            }, 500);
+                        }
+                    };
+                    
+                    animateCamera();
+                } else {
+                    // Version avec drag direct sur le globe
+                    console.log("Focus avec contrôles de globe directs");
+                    
+                    // Récupérer le globe
+                    const globe = this.globeManager.getGlobe();
+                    if (!globe) {
+                        console.error("Globe non initialisé");
+                        return;
+                    }
+                    
+                    // Calculer la position inverse sur le globe
+                    // Nous devons calculer la rotation du globe nécessaire pour amener le point vers l'avant
+                    
+                    // Créer un vecteur pointant vers l'avant (z négatif dans la scène)
+                    const forward = new THREE.Vector3(0, 0, 1);
+                    
+                    // Calculer l'angle entre la position normalisée et le vecteur avant
+                    const positionNormalized = position.clone().normalize();
+                    
+                    // Sauvegarde de la rotation actuelle
+                    const startRotation = {
+                        x: globe.rotation.x,
+                        y: globe.rotation.y,
+                        z: globe.rotation.z
+                    };
+                    
+                    // Déterminer les rotations cibles
+                    // On va utiliser des quaternions pour calculer la rotation nécessaire
+                    const quaternion = new THREE.Quaternion();
+                    quaternion.setFromUnitVectors(positionNormalized, forward);
+                    
+                    // Convertir le quaternion en angles d'Euler pour notre globe
+                    const euler = new THREE.Euler();
+                    euler.setFromQuaternion(quaternion);
+                    
+                    // Les rotations cibles
+                    const targetRotation = {
+                        x: 0, // On garde le tilt vertical à 0
+                        y: euler.y, 
+                        z: 0  // On ne tourne pas sur l'axe Z
+                    };
+                    
+                    console.log("Rotation actuelle:", startRotation);
+                    console.log("Rotation cible:", targetRotation);
+                    
+                    // Désactiver temporairement l'auto-rotation
+                    const wasAutoRotating = this.globeManager.autoRotate;
+                    this.globeManager.autoRotate = false;
+                    
+                    // Animation de la rotation du globe
+                    const duration = 1500; // ms
+                    const startTime = Date.now();
+                    
+                    const animateGlobe = () => {
+                        const elapsed = Date.now() - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+                        
+                        // Easing function pour un mouvement plus naturel
+                        const easeProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease out
+                        
+                        // Interpolation de la rotation
+                        globe.rotation.y = startRotation.y + (targetRotation.y - startRotation.y) * easeProgress;
+                        
+                        if (progress < 1) {
+                            requestAnimationFrame(animateGlobe);
+                        } else {
+                            // Restaurer l'auto-rotation après un délai
+                            setTimeout(() => {
+                                this.globeManager.autoRotate = wasAutoRotating;
+                            }, 500);
+                        }
+                    };
+                    
+                    animateGlobe();
+                    
+                    // Ajouter un visuel de debug si activé
+                    if (window.debugMode) {
+                        const cameraPos = this.cameraManager.camera.position.clone();
+                        this.debugPositions(position, cameraPos);
+                    }
+                }
+            }
+            
+            /**
+             * Fonction de debug pour visualiser les positions
+             * @param {THREE.Vector3} markerPos - Position du marqueur
+             * @param {THREE.Vector3} cameraPos - Position de la caméra
+             */
+            debugPositions(markerPos, cameraPos) {
+                // Ne rien faire si le mode debug n'est pas activé
+                if (!window.debugMode) return;
+                
+                // Créer une sphère rouge pour le marqueur
+                const markerGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+                const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+                const markerSphere = new THREE.Mesh(markerGeometry, markerMaterial);
+                markerSphere.position.copy(markerPos);
+                
+                // Créer une sphère bleue pour la caméra
+                const cameraGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+                const cameraMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+                const cameraSphere = new THREE.Mesh(cameraGeometry, cameraMaterial);
+                cameraSphere.position.copy(cameraPos);
+                
+                // Ajouter à la scène
+                this.sceneManager.add(markerSphere);
+                this.sceneManager.add(cameraSphere);
+                
+                // Créer une ligne entre les deux positions
+                const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffff00 });
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints([markerPos, cameraPos]);
+                const line = new THREE.Line(lineGeometry, lineMaterial);
+                
+                this.sceneManager.add(line);
+                
+                // Stocker les objets de debug pour pouvoir les supprimer plus tard
+                this.debugObjects = this.debugObjects || [];
+                this.debugObjects.push(markerSphere, cameraSphere, line);
+                
+                // Supprimer les anciens objets de debug après 5 secondes
+                setTimeout(() => {
+                    if (this.debugObjects && this.debugObjects.length > 0) {
+                        // Supprimer seulement les 3 premiers éléments (nos objets actuels)
+                        for (let i = 0; i < 3 && this.debugObjects.length > 0; i++) {
+                            const obj = this.debugObjects.shift();
+                            if (obj && this.sceneManager.scene) {
+                                this.sceneManager.scene.remove(obj);
+                            }
+                        }
+                    }
+                }, 5000);
+            }
+            
+            /**
+             * Active ou désactive le mode debug
+             * @param {boolean} active - True pour activer, false pour désactiver
+             */
+            toggleDebugMode(active) {
+                window.debugMode = active;
+                
+                // Si on désactive le debug, nettoyer les objets de debug
+                if (!active && this.debugObjects) {
+                    this.debugObjects.forEach(obj => {
+                        if (obj && this.sceneManager.scene) {
+                            this.sceneManager.scene.remove(obj);
+                        }
+                    });
+                    this.debugObjects = [];
+                }
+                
+                // Notification
+                this.uiManager.showNotification(
+                    active ? 'Mode debug activé' : 'Mode debug désactivé'
+                );
+                
+                return active;
+            }
+
+            /**
+             * Focus la caméra sur des coordonnées géographiques
+             * @param {number} lat - Latitude en degrés
+             * @param {number} lon - Longitude en degrés
+             */
+            focusOnLocation(lat, lon) {
+                console.log(`Focus sur coordonnées: lat=${lat}, lon=${lon}`);
+                
+                // Calculer la position 3D à partir des coordonnées
+                // Utiliser le même offset que celui utilisé pour créer les marqueurs
+                const elevationOffset = 0.25;
+                const position = this.esportsManager.geoToCartesian(
+                    lat, lon, CONFIG.GLOBE.RADIUS + elevationOffset
+                );
+                
+                // Utiliser la méthode focusOnPosition
+                this.focusOnPosition(position);
+            }
+        }
+
+        // Instance globale
+        let esportsApp;
+        let partnersVisible = false;
+
+        // Démarrage de l'application
+        document.addEventListener('DOMContentLoaded', function() {
+            esportsApp = new EsportsGlobeApp();
+            esportsApp.init();
+        });
+
+        // Fonctions pour les boutons
+        function togglePartners() {
+            if (partnersVisible) {
+                // Animation de fondu avant de supprimer les marqueurs
+                const markers = esportsApp.esportsManager.markers;
+                
+                // Stocker l'état actuel pour l'animation
+                const originalOpacities = markers.map(marker => ({
+                    marker: marker,
+                    opacity: marker.sprite.material.opacity
+                }));
+                
+                // Animation de fondu
+                const fadeOut = (progress) => {
+                    originalOpacities.forEach(item => {
+                        item.marker.sprite.material.opacity = item.opacity * (1 - progress);
+                    });
+                };
+                
+                // Exécuter l'animation
+                const duration = 400; // ms
+                const startTime = Date.now();
+                
+                const animate = () => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    fadeOut(progress);
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        // Supprimer les marqueurs après le fondu
+                        esportsApp.clearPartners();
+                        partnersVisible = false;
+                    }
+                };
+                
+                animate();
+            } else {
+                esportsApp.addEWCPartners();
+                partnersVisible = true;
+                
+                // Animation d'apparition des marqueurs
+                const markers = esportsApp.esportsManager.markers;
+                
+                markers.forEach(marker => {
+                    // Sauvegarder l'opacité finale
+                    const targetOpacity = marker.sprite.material.opacity;
+                    // Commencer invisible
+                    marker.sprite.material.opacity = 0;
+                    // Sauvegarder l'échelle finale
+                    const targetScale = marker.scaleBase;
+                    // Commencer petit
+                    marker.sprite.scale.set(0.1, 0.1, 1);
+                    marker.scaleBase = 0.1;
+                    
+                    // Animation d'apparition avec délai basé sur index
+                    setTimeout(() => {
+                        const startTime = Date.now();
+                        const duration = 500; // ms
+                        
+                        const animateFadeIn = () => {
+                            const elapsed = Date.now() - startTime;
+                            const progress = Math.min(elapsed / duration, 1);
+                            
+                            // Easing cubic
+                            const ease = 1 - Math.pow(1 - progress, 3);
+                            
+                            // Mettre à jour l'opacité et l'échelle
+                            marker.sprite.material.opacity = targetOpacity * ease;
+                            marker.scaleBase = 0.1 + (targetScale - 0.1) * ease;
+                            marker.sprite.scale.set(marker.scaleBase, marker.scaleBase, 1);
+                            
+                            if (progress < 1) {
+                                requestAnimationFrame(animateFadeIn);
+                            } else {
+                                // Rétablir les valeurs finales
+                                marker.sprite.material.opacity = targetOpacity;
+                                marker.scaleBase = targetScale;
+                            }
+                        };
+                        
+                        animateFadeIn();
+                    }, Math.random() * 300); // Décalage aléatoire entre 0 et 300ms
+                });
+            }
+        }
+    </script>
+</body>
+</html> 

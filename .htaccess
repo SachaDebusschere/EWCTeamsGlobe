@@ -1,0 +1,12 @@
+# Redirection depuis la racine ou index.html vers esports.html
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^$ esports.html [L,R=301]
+  RewriteRule ^index\.html$ esports.html [L,R=301]
+</IfModule>
+
+# Si mod_rewrite n'est pas disponible, utiliser Redirect
+<IfModule !mod_rewrite.c>
+  Redirect 301 /index.html /esports.html
+  Redirect 301 / /esports.html
+</IfModule> 
