@@ -6,7 +6,7 @@ const CONFIG = {
     // Paramètres du globe
     GLOBE: {
         RADIUS: 5,
-        TEXTURE_PATH: './public/img/night_world_mpa.jpg',
+        TEXTURE_PATH: './img/night_world_mpa.jpg',
         ROTATION_SPEED: 0.001,
         SEGMENTS: 64
     },

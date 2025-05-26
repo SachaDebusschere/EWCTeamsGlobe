@@ -3,11 +3,11 @@
   "version": "2.0.0",
   "description": "Globe terrestre interactif créé avec Three.js et WebGL, utilisant une architecture modulaire",
   "main": "index.html",
+  "type": "module",
   "scripts": {
-    "start": "python server.py",
-    "dev": "python server.py",
-    "test": "python -m http.server 8001 && echo 'Ouvrez http://localhost:8001/test.html'",
-    "serve": "python -m http.server 8000"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "keywords": [
     "threejs",
@@ -21,8 +21,12 @@
   ],
   "author": "Votre Nom",
   "license": "MIT",
-  "devDependencies": {},
-  "dependencies": {},
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "three": "^0.128.0"
+  },
   "cdnDependencies": {
     "three.js": "r128",
     "three-orbit-controls": "latest"
@@ -45,8 +49,7 @@
     "js/",
     "public/",
     "README.md",
-    "DEVELOPER.md",
-    "server.py"
+    "DEVELOPER.md"
   ],
   "browserslist": [
     "> 1%",

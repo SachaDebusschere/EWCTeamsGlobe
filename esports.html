@@ -101,8 +101,14 @@
     </div>
     
     <!-- Bibliothèques Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+        
+        // Rendre THREE disponible globalement comme avant
+        window.THREE = THREE;
+        window.OrbitControls = OrbitControls;
+    </script>
     
     <!-- Configuration -->
     <script src="js/config.js"></script>
@@ -125,7 +131,7 @@
                 name: 'Karmine Corp',
                 location: 'Paris, France',
                 description: 'Fondée en 2020, la Karmine Corp est une équipe française d\'esport connue pour ses succès en LFL et sa communauté très engagée.',
-                logoPath: './public/img/logos/logo_karmine.webp',
+                logoPath: './img/logos/logo_karmine.webp',
                 lat: 48.8566,
                 lon: 2.3522
             },
@@ -133,7 +139,7 @@
                 name: 'T1',
                 location: 'Séoul, Corée du Sud',
                 description: 'T1 est une organisation esport légendaire, notamment connue pour ses performances historiques sur League of Legends avec Faker.',
-                logoPath: './public/img/logos/logo_t1.png',
+                logoPath: './img/logos/logo_t1.png',
                 lat: 37.5665,
                 lon: 126.9780
             },
@@ -141,7 +147,7 @@
                 name: 'Team Falcons',
                 location: 'Riyad, Arabie Saoudite',
                 description: 'Team Falcons est une organisation esport saoudienne en pleine expansion, investissant dans plusieurs jeux compétitifs.',
-                logoPath: './public/img/logos/logo_falcons.webp',
+                logoPath: './img/logos/logo_falcons.webp',
                 lat: 24.7136,
                 lon: 46.6753
             },
@@ -149,7 +155,7 @@
                 name: 'G2 Esports',
                 location: 'Berlin, Allemagne',
                 description: 'G2 Esports est l\'une des organisations les plus prestigieuses d\'Europe, avec des équipes d\'élite dans plusieurs disciplines.',
-                logoPath: './public/img/logos/G2_Esports_oldlogo.webp',
+                logoPath: './img/logos/G2_Esports_oldlogo.webp',
                 lat: 52.5200,
                 lon: 13.4050
             },
@@ -157,7 +163,7 @@
                 name: 'JD Gaming',
                 location: 'Shanghai, Chine',
                 description: 'JD Gaming est une équipe chinoise majeure, particulièrement reconnue pour ses performances en League of Legends.',
-                logoPath: './public/img/logos/logo_jdg.png',
+                logoPath: './img/logos/logo_jdg.png',
                 lat: 31.2304,
                 lon: 121.4737
             },
@@ -165,7 +171,7 @@
                 name: 'LOUD',
                 location: 'São Paulo, Brésil',
                 description: 'LOUD est l\'une des organisations les plus populaires d\'Amérique Latine, connue pour son engagement communautaire et ses contenus.',
-                logoPath: './public/img/logos/logo_loud.png',
+                logoPath: './img/logos/logo_loud.png',
                 lat: -23.5505,
                 lon: -46.6333
             },
@@ -173,7 +179,7 @@
                 name: 'Sentinels',
                 location: 'Los Angeles, États-Unis',
                 description: 'Sentinels est une organisation nord-américaine réputée notamment pour ses équipes VALORANT et son histoire dans l\'esport.',
-                logoPath: './public/img/logos/logo_sentinels.png',
+                logoPath: './img/logos/logo_sentinels.png',
                 lat: 34.0522,
                 lon: -118.2437
             }
